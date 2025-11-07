@@ -1,0 +1,144 @@
+//Create Database Table
+
+CREATE DATABASE studentdb;
+
+USE studentdb;
+
+CREATE TABLE Student (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50),
+    age INT,
+    course VARCHAR(50)
+);
+
+//Student Entity Class
+
+package com.example.hibernateapp;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "Student")
+public class Student {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "age")
+    private int age;
+
+    @Column(name = "course")
+    private String course;
+
+    // Constructors
+    public Student() {}
+    public Student(String name, int age, String course) {
+        this.name = name;
+        this.age = age;
+        this.course = course;
+    }
+
+    // Getters and Setters
+    // ...
+}
+
+//Hibernate Configuration File — hibernate.cfg.xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+    <session-factory>
+        <property name="hibernate.connection.driver_class">com.mysql.cj.jdbc.Driver</property>
+        <property name="hibernate.connection.url">jdbc:mysql://localhost:3306/studentdb</property>
+        <property name="hibernate.connection.username">root</property>
+        <property name="hibernate.connection.password">yourpassword</property>
+        <property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
+        <property name="show_sql">true</property>
+        <property name="hbm2ddl.auto">update</property>
+
+        <mapping class="com.example.hibernateapp.Student"/>
+    </session-factory>
+</hibernate-configuration>
+
+//CRUD Operations — StudentDAO.java
+
+package com.example.hibernateapp;
+
+import org.hibernate.*;
+import org.hibernate.cfg.Configuration;
+import java.util.List;
+
+public class StudentDAO {
+    private static SessionFactory factory = new Configuration().configure("hibernate.cfg.xml").buildSessionFactory();
+
+    // CREATE
+    public void addStudent(Student student) {
+        Session session = factory.openSession();
+        Transaction tx = session.beginTransaction();
+        session.save(student);
+        tx.commit();
+        session.close();
+        System.out.println("Student added successfully!");
+    }
+
+    // READ
+    public List<Student> getAllStudents() {
+        Session session = factory.openSession();
+        List<Student> list = session.createQuery("from Student", Student.class).list();
+        session.close();
+        return list;
+    }
+
+    // UPDATE
+    public void updateStudent(int id, String newCourse) {
+        Session session = factory.openSession();
+        Transaction tx = session.beginTransaction();
+        Student s = session.get(Student.class, id);
+        s.setCourse(newCourse);
+        session.update(s);
+        tx.commit();
+        session.close();
+        System.out.println("Student updated successfully!");
+    }
+
+    // DELETE
+    public void deleteStudent(int id) {
+        Session session = factory.openSession();
+        Transaction tx = session.beginTransaction();
+        Student s = session.get(Student.class, id);
+        if (s != null) session.delete(s);
+        tx.commit();
+        session.close();
+        System.out.println("Student deleted successfully!");
+    }
+}
+
+//Main Class — AppMain.java
+
+package com.example.hibernateapp;
+
+public class AppMain {
+    public static void main(String[] args) {
+        StudentDAO dao = new StudentDAO();
+
+        // CREATE
+        dao.addStudent(new Student("Alice", 20, "Computer Science"));
+
+        // READ
+        dao.getAllStudents().forEach(s -> 
+            System.out.println(s.getId() + " | " + s.getName() + " | " + s.getCourse())
+        );
+
+        // UPDATE
+        dao.updateStudent(1, "Data Science");
+
+        // DELETE
+        dao.deleteStudent(1);
+    }
+}
