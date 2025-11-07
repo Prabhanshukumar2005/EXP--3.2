@@ -1,0 +1,75 @@
+//Create the Course class (dependency)
+
+package com.example.springdemo;
+
+public class Course {
+    private String courseName;
+
+    public Course(String courseName) {
+        this.courseName = courseName;
+    }
+
+    public void displayCourseInfo() {
+        System.out.println("Enrolled in Course: " + courseName);
+    }
+}
+
+// Create the Student class (dependent class)
+
+package com.example.springdemo;
+
+public class Student {
+    private Course course;  // Dependency
+
+    // Constructor-based injection
+    public Student(Course course) {
+        this.course = course;
+    }
+
+    public void showStudentInfo() {
+        System.out.println("Student details:");
+        course.displayCourseInfo();
+    }
+}
+
+//Create the Configuration Class using annotations
+package com.example.springdemo;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class AppConfig {
+
+    @Bean
+    public Course courseBean() {
+        return new Course("Spring Framework Fundamentals");
+    }
+
+    @Bean
+    public Student studentBean() {
+        // Dependency injected via constructor
+        return new Student(courseBean());
+    }
+}
+
+//Create the Main Application to test DI
+package com.example.springdemo;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+public class MainApp {
+    public static void main(String[] args) {
+        // Load Spring context from Java-based configuration
+        ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
+
+        // Retrieve Student bean
+        Student student = context.getBean(Student.class);
+
+        // Call method to verify dependency injection
+        student.showStudentInfo();
+
+        ((AnnotationConfigApplicationContext) context).close();
+    }
+}
